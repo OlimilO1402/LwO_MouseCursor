@@ -22,7 +22,7 @@ Public Enum EMouseCursor
 End Enum
 
 Private mIUVTable As TIUnknownVTable
-Private mpVTable  As Long '= VarPtr(mIUVTable)
+Private mpVTable  As LongPtr '= VarPtr(mIUVTable)
 
 Public Type TMouseCursor
     pVTable     As LongPtr
@@ -31,26 +31,32 @@ Public Type TMouseCursor
     MyForm      As Object
 End Type
 
-'the prefix "New_" reminds us here we create an object !-)
-Public Property Let New_MouseCursor(this As TMouseCursor, aForm As Object, NewCursor As EMouseCursor)
+Private Function InitMouseCursorVTable() As LongPtr
     
-    If mpVTable = 0 Then
-        
-        'now obtain the function pointers
-        'this will be done only once in the lifetime of the program!
-        'every lightweight class has to use it's own set of IUnknown-functions
-        With mIUVTable
-            .PQueryInterface = FncPtr(AddressOf QueryInterface)
-            .PAddRef = FncPtr(AddressOf AddRef)
-            .PRelease = FncPtr(AddressOf Release)
-        End With
-        mpVTable = VarPtr(mIUVTable)
-        
-    End If
+    'now obtain the function pointers
+    'this will be done only once in the lifetime of the program!
+    'every lightweight class has to use it's own set of IUnknown-functions
+    
+    With mIUVTable
+        .PQueryInterface = FncPtr(AddressOf QueryInterface)
+        .PAddRef = FncPtr(AddressOf AddRef)
+        .PRelease = FncPtr(AddressOf Release)
+    End With
+    
+    InitMouseCursorVTable = VarPtr(mIUVTable)
+    
+End Function
+
+'the prefix "New_" reminds us here we create an object !-)
+Public Property Let New_MouseCursor(this As TMouseCursor, aForm As Object, ByVal NewCursor As EMouseCursor)
+    
+    If mpVTable = 0 Then mpVTable = InitMouseCursorVTable
+    
     With this
+        
         Set .MyForm = aForm
         'save the previous MouseCursor in the variable PrevCursor
-        .PrevCursor = Screen.MousePointer
+        .PrevCursor = .MyForm.MousePointer
         .pVTable = mpVTable
         RtlMoveMemory .pThisObject, VarPtr(.pVTable), SizeOf_LongPtr
         
@@ -64,24 +70,24 @@ End Property
 
 Private Function QueryInterface(this As TMouseCursor, riid As LongPtr, pvObj As LongPtr) As Long
     
-    Debug.Print "QI" 'will not happen here
+    Debug.Print "MouseCursor::QueryInterface" 'will not happen here
     pvObj = 0
-    'bei Objekten die kein Interface haben:
+    'Objekts haveing no interface return:
     QueryInterface = E_NOINTERFACE
     
 End Function
 
 Private Function AddRef(this As TMouseCursor) As Long
     
-    Debug.Print "AR" 'will not happen here
+    Debug.Print "MouseCursor::AddRef" 'will not happen here
     'add a reference here if you use reference-counting
     'in the MouseCursor-object we don't nedd it
     
 End Function
 
 Private Function Release(this As TMouseCursor) As Long
-    Debug.Print "RL"
     
+    Debug.Print "MouseCursor::Release"
     'subtract a reference here, if you use ref-counting
     'now restore the old mousecursor
     With this
