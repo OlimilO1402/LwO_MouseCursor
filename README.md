@@ -23,7 +23,7 @@ The IDispatch interface has these 4 functions in this order:
   
 VB can of course deal with classes that implement the IUnknown interface only, the so called lightweight objects.  
 This repo is a small example for explaining how to build a lightweight object, and how to use and run it in VB. 
-As an example the object created here will 
+As a little example the project will manage different mouse cursors. The code runs in VBC,VB6/VBA6 VBA7 x86, x64.  
 The lightweight object technic was first published by Matthew Curland in 1999  
 Have a look at the book:  
 
